@@ -2,13 +2,6 @@ import { memo, useId } from "react";
 
 function GILogo({ size = 64, animate = true, spinning = false, glow = false }) {
   const s = size;
-  // Unique per instance — React's useId() guarantees no collision even
-  // when dozens of GILogo instances render on the same page at once
-  // (Sidebar, Header orb, JarvisDashboard, Login, BootScreen...).
-  // Without this, every instance shared the same hardcoded gradient
-  // ID, and which definition the browser actually used became
-  // inconsistent between mobile and desktop — that's exactly why the
-  // flame petals rendered on one and not the other.
   const uid = useId();
   const flameGradId = `gi-flame-grad-${uid}`;
   const coreGradId = `gi-core-grad-${uid}`;
@@ -19,7 +12,7 @@ function GILogo({ size = 64, animate = true, spinning = false, glow = false }) {
   const glowStyle = glow
     ? {
         filter:
-          "drop-shadow(0 0 6px rgba(0,212,255,0.55)) drop-shadow(0 0 14px rgba(59,130,246,0.35))",
+          "drop-shadow(0 0 6px rgba(59,130,246,0.45)) drop-shadow(0 0 14px rgba(59,130,246,0.25))",
       }
     : undefined;
 
@@ -43,13 +36,8 @@ function GILogo({ size = 64, animate = true, spinning = false, glow = false }) {
         </radialGradient>
       </defs>
 
-      {!spinning && (
-        <circle
-          cx="50" cy="50" r="47"
-          fill="none" stroke="#00D4FF" strokeWidth="0.8"
-          strokeDasharray="1.5 4" strokeOpacity="0.35"
-        />
-      )}
+      {/* Outer dashed ring removed per redesign — it read as a
+          redundant floating dot/ring around the logo. */}
 
       <g className={spinClass} style={{ transformOrigin: "50% 50%" }}>
         {[0, 45, 90, 135, 180, 225, 270, 315].map((deg) => (

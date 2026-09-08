@@ -14,7 +14,7 @@ function ThinkingRow() {
       className="flex items-center gap-2 mb-6"
     >
       <GILogo size={22} animate spinning glow />
-      <span className="text-slate-600 text-xs animate-pulse">GI is thinking...</span>
+      <span className="text-slate-400 text-xs animate-pulse">GI is thinking...</span>
     </motion.div>
   );
 }
@@ -31,9 +31,6 @@ function MessageBubble({ msg, index, onPin, onRegenerate, isLast }) {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  // Support both a single legacy `msg.image` and a new `msg.images`
-  // array — older Firestore documents only ever had the singular
-  // field, so this keeps existing chat history rendering correctly.
   const images = msg.images?.length ? msg.images : msg.image ? [msg.image] : [];
 
   return (
@@ -43,19 +40,16 @@ function MessageBubble({ msg, index, onPin, onRegenerate, isLast }) {
       transition={{ duration: 0.28, delay: Math.min(index * 0.01, 0.12), ease: "easeOut" }}
       className={`mb-6 ${isUser ? "flex flex-col items-end" : "flex flex-col items-start"}`}
     >
-      {/* Avatar + name share one compact row instead of the avatar
-          taking its own row above — this is what was eating extra
-          vertical space on small screens. */}
       <div className={`flex items-center gap-2 mb-1.5 px-1 ${isUser ? "flex-row-reverse" : ""}`}>
         {isUser ? (
           <img src={user?.photoURL} alt="You"
-            className="w-6 h-6 rounded-full border border-cyan-500/30 object-cover shrink-0" />
+            className="w-6 h-6 rounded-full border border-blue-400/40 object-cover shrink-0" />
         ) : (
           <GILogo size={22} animate={msg.streaming} spinning={msg.streaming} />
         )}
-        <span className="text-xs text-slate-600 font-medium">{isUser ? "You" : "GI"}</span>
+        <span className="text-xs text-slate-400 font-medium">{isUser ? "You" : "GI"}</span>
         {msg.streaming && (
-          <span className="text-xs text-cyan-400 animate-pulse">● Thinking</span>
+          <span className="text-xs text-blue-500 animate-pulse">● Thinking</span>
         )}
       </div>
 
@@ -64,7 +58,7 @@ function MessageBubble({ msg, index, onPin, onRegenerate, isLast }) {
           <div className={`flex flex-wrap gap-1.5 mb-1 ${isUser ? "justify-end" : "justify-start"}`}>
             {images.map((src, i) => (
               <img key={i} src={src} alt={`Uploaded ${i + 1}`}
-                className="max-w-[45%] sm:max-w-xs rounded-2xl border border-white/10 shadow-lg" />
+                className="max-w-[45%] sm:max-w-xs rounded-2xl border border-black/[0.08] shadow-sm" />
             ))}
           </div>
         )}
@@ -72,9 +66,9 @@ function MessageBubble({ msg, index, onPin, onRegenerate, isLast }) {
         {msg.text ? (
           <div className={`relative px-4 py-3 rounded-2xl text-sm leading-relaxed shadow-sm transition-shadow duration-300 ${
             isUser
-              ? "bg-gradient-to-br from-cyan-600 to-cyan-700 text-white rounded-tr-sm hover:shadow-[0_0_18px_rgba(34,211,238,0.35)]"
-              : `bg-[#0f1725] text-slate-100 rounded-tl-sm border border-cyan-500/[0.08] hover:shadow-[0_0_18px_rgba(34,211,238,0.15)] ${
-                  msg.streaming ? "shadow-[0_0_16px_rgba(34,211,238,0.2)]" : ""
+              ? "bg-blue-50 text-[#1e2a3a] rounded-tr-sm border border-blue-200/60"
+              : `bg-white text-[#1e2a3a] rounded-tl-sm border border-black/[0.06] shadow-sm ${
+                  msg.streaming ? "shadow-[0_0_16px_rgba(59,130,246,0.12)]" : ""
                 }`
           }`}>
             {isUser
@@ -89,26 +83,26 @@ function MessageBubble({ msg, index, onPin, onRegenerate, isLast }) {
         {!isUser && msg.text && !msg.streaming && (
           <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all duration-200 px-1">
             <button onClick={handleCopy}
-              className="flex items-center gap-1 px-2 py-1 rounded-lg text-xs text-slate-500 hover:text-slate-300 hover:bg-white/[0.06] transition-all">
-              {copied ? <><Check size={11} className="text-emerald-400" /> Copied</> : <><Copy size={11} /> Copy</>}
+              className="flex items-center gap-1 px-2 py-1 rounded-lg text-xs text-slate-400 hover:text-slate-700 hover:bg-black/[0.04] transition-all">
+              {copied ? <><Check size={11} className="text-emerald-500" /> Copied</> : <><Copy size={11} /> Copy</>}
             </button>
             <button onClick={() => onPin?.(msg)}
-              className="flex items-center gap-1 px-2 py-1 rounded-lg text-xs text-slate-500 hover:text-cyan-400 hover:bg-cyan-500/10 transition-all">
+              className="flex items-center gap-1 px-2 py-1 rounded-lg text-xs text-slate-400 hover:text-blue-500 hover:bg-blue-500/10 transition-all">
               <Pin size={11} /> Pin
             </button>
             {isLast && (
               <button onClick={() => onRegenerate?.()}
-                className="flex items-center gap-1 px-2 py-1 rounded-lg text-xs text-slate-500 hover:text-purple-400 hover:bg-purple-500/10 transition-all">
+                className="flex items-center gap-1 px-2 py-1 rounded-lg text-xs text-slate-400 hover:text-purple-500 hover:bg-purple-500/10 transition-all">
                 <RotateCcw size={11} /> Retry
               </button>
             )}
             <div className="flex items-center gap-0.5 ml-1">
               <button onClick={() => setLiked(true)}
-                className={`p-1 rounded-lg transition-all ${liked === true ? "text-emerald-400" : "text-slate-600 hover:text-emerald-400"}`}>
+                className={`p-1 rounded-lg transition-all ${liked === true ? "text-emerald-500" : "text-slate-400 hover:text-emerald-500"}`}>
                 <ThumbsUp size={11} />
               </button>
               <button onClick={() => setLiked(false)}
-                className={`p-1 rounded-lg transition-all ${liked === false ? "text-red-400" : "text-slate-600 hover:text-red-400"}`}>
+                className={`p-1 rounded-lg transition-all ${liked === false ? "text-red-500" : "text-slate-400 hover:text-red-500"}`}>
                 <ThumbsDown size={11} />
               </button>
             </div>
@@ -167,7 +161,7 @@ function ChatHistory({ messages, loading, onPin, onRegenerate }) {
           <motion.button
             initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }}
             onClick={() => bottomRef.current?.scrollIntoView({ behavior: "smooth" })}
-            className="absolute bottom-4 right-4 p-2.5 rounded-full glass border border-white/10 text-slate-400 hover:text-white shadow-lg transition-all">
+            className="absolute bottom-4 right-4 p-2.5 rounded-full bg-white border border-black/[0.08] text-slate-500 hover:text-slate-800 shadow-lg transition-all">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <polyline points="6,9 12,15 18,9"/>
             </svg>

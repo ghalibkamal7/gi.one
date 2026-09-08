@@ -5,14 +5,6 @@ import { useAuth } from "../context/AuthContext";
 import { exportChatToPDF, exportChatToText } from "../utils/exportChat";
 import GILogo from "./GILogo";
 
-// Defined OUTSIDE Sidebar so its identity is stable across renders —
-// this was the root cause of the chat list "blinking": when ChatItem
-// was declared inside Sidebar's function body, every re-render created
-// a brand-new function reference, and React treats a changed component
-// reference as a completely different component type. That forced the
-// entire list to fully unmount and remount on every re-render (e.g.
-// every time a new chat's Firestore snapshot arrived), which is exactly
-// what a "blink" looks like.
 const ChatItem = memo(function ChatItem({
   chat, isActive, isPinned, isMobile,
   isRenaming, renameValue, onRenameChange, onCommitRename, onCancelRename,
@@ -28,12 +20,12 @@ const ChatItem = memo(function ChatItem({
       transition={{ duration: 0.18 }}
       className={`group relative flex items-center gap-2 px-3 py-2.5 rounded-xl cursor-pointer transition-colors duration-150 ${
         isActive
-          ? "bg-cyan-500/10 border border-cyan-500/30"
-          : "hover:bg-white/[0.04] border border-transparent"
+          ? "bg-blue-500/10 border border-blue-500/25"
+          : "hover:bg-black/[0.03] border border-transparent"
       }`}
       onClick={onSelect}
     >
-      <MessageSquare size={13} className={`shrink-0 ${isActive ? "text-cyan-400" : "text-slate-600"}`} />
+      <MessageSquare size={13} className={`shrink-0 ${isActive ? "text-blue-600" : "text-slate-400"}`} />
 
       {isRenaming ? (
         <input autoFocus value={renameValue}
@@ -41,31 +33,31 @@ const ChatItem = memo(function ChatItem({
           onBlur={onCommitRename}
           onKeyDown={(e) => { if (e.key === "Enter") onCommitRename(); if (e.key === "Escape") onCancelRename(); }}
           onClick={(e) => e.stopPropagation()}
-          className="flex-1 bg-white/10 rounded-lg px-2 py-0.5 text-white text-sm outline-none border border-cyan-500/50 min-w-0"
+          className="flex-1 bg-white rounded-lg px-2 py-0.5 text-[#1e2a3a] text-sm outline-none border border-blue-400/60 min-w-0"
         />
       ) : (
-        <span className={`flex-1 text-sm truncate ${isActive ? "text-white" : "text-slate-400"}`}>
+        <span className={`flex-1 text-sm truncate ${isActive ? "text-[#1e2a3a] font-medium" : "text-slate-500"}`}>
           {chat.title}
         </span>
       )}
 
-      {isPinned && <Pin size={10} className="text-cyan-400 shrink-0 opacity-60" />}
+      {isPinned && <Pin size={10} className="text-blue-500 shrink-0 opacity-70" />}
 
       <div className="hidden group-hover:flex items-center gap-0.5 shrink-0">
         <button onClick={(e) => { e.stopPropagation(); onTogglePin(); }} aria-label="Pin chat"
-          className="p-1 rounded-lg hover:bg-white/10 text-slate-500 hover:text-cyan-400 transition-colors" title="Pin">
+          className="p-1 rounded-lg hover:bg-black/5 text-slate-400 hover:text-blue-500 transition-colors" title="Pin">
           <Pin size={11} />
         </button>
         <button onClick={(e) => { e.stopPropagation(); onStartRename(); }} aria-label="Rename chat"
-          className="p-1 rounded-lg hover:bg-white/10 text-slate-500 hover:text-white transition-colors" title="Rename">
+          className="p-1 rounded-lg hover:bg-black/5 text-slate-400 hover:text-[#1e2a3a] transition-colors" title="Rename">
           <PenLine size={11} />
         </button>
         <button onClick={(e) => { e.stopPropagation(); onToggleExportMenu(); }} aria-label="Export chat"
-          className="p-1 rounded-lg hover:bg-white/10 text-slate-500 hover:text-white transition-colors" title="Export">
+          className="p-1 rounded-lg hover:bg-black/5 text-slate-400 hover:text-[#1e2a3a] transition-colors" title="Export">
           <Download size={11} />
         </button>
         <button onClick={(e) => { e.stopPropagation(); onDelete(); }} aria-label="Delete chat"
-          className="p-1 rounded-lg hover:bg-red-500/20 text-slate-500 hover:text-red-400 transition-colors" title="Delete">
+          className="p-1 rounded-lg hover:bg-red-500/10 text-slate-400 hover:text-red-500 transition-colors" title="Delete">
           <Trash2 size={11} />
         </button>
       </div>
@@ -73,12 +65,12 @@ const ChatItem = memo(function ChatItem({
       <AnimatePresence>
         {isExportMenuOpen && (
           <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }}
-            className="absolute right-2 top-10 z-50 glass rounded-xl shadow-xl border border-white/10 overflow-hidden min-w-[130px]"
+            className="absolute right-2 top-10 z-50 bg-white rounded-xl shadow-xl border border-black/[0.06] overflow-hidden min-w-[130px]"
             onClick={(e) => e.stopPropagation()}>
             <button onClick={onExportPDF}
-              className="w-full text-left px-4 py-2.5 text-sm text-slate-300 hover:bg-white/10 transition-colors">📄 Export PDF</button>
+              className="w-full text-left px-4 py-2.5 text-sm text-slate-600 hover:bg-black/[0.04] transition-colors">📄 Export PDF</button>
             <button onClick={onExportTXT}
-              className="w-full text-left px-4 py-2.5 text-sm text-slate-300 hover:bg-white/10 transition-colors">📝 Export TXT</button>
+              className="w-full text-left px-4 py-2.5 text-sm text-slate-600 hover:bg-black/[0.04] transition-colors">📝 Export TXT</button>
           </motion.div>
         )}
       </AnimatePresence>
@@ -145,19 +137,19 @@ function Sidebar({ chats, activeChatId, setActiveChatId, createNewChat, deleteCh
     <motion.div
       initial={{ x: -10, opacity: 0 }}
       animate={{ x: 0, opacity: 1 }}
-      className="w-[280px] h-full flex flex-col bg-[#05060f] border-r border-cyan-500/10 shrink-0"
+      className="w-[280px] h-full flex flex-col bg-[#faf6ee] border-r border-black/[0.06] shrink-0"
     >
-      <div className="p-4 border-b border-white/[0.06]">
+      <div className="p-4 border-b border-black/[0.06]">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2.5">
             <GILogo size={36} animate={false} />
             <div>
-              <p className="text-white font-semibold text-sm leading-tight">GI.ONE</p>
-              <p className="text-slate-600 text-xs">Learn Smarter With GI</p>
+              <p className="text-[#1e2a3a] font-semibold text-sm leading-tight">GI.ONE</p>
+              <p className="text-slate-500 text-xs">Learn Smarter With GI</p>
             </div>
           </div>
           {isMobile && (
-            <button onClick={onClose} aria-label="Close sidebar" className="p-1.5 rounded-lg hover:bg-white/10 text-slate-500 hover:text-white transition-colors">
+            <button onClick={onClose} aria-label="Close sidebar" className="p-1.5 rounded-lg hover:bg-black/5 text-slate-400 hover:text-[#1e2a3a] transition-colors">
               <X size={16} />
             </button>
           )}
@@ -165,19 +157,19 @@ function Sidebar({ chats, activeChatId, setActiveChatId, createNewChat, deleteCh
 
         <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
           onClick={createNewChat}
-          className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-cyan-600 hover:bg-cyan-500 text-white text-sm font-medium transition-colors cursor-pointer shadow-md">
+          className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-blue-500 hover:bg-blue-600 text-white text-sm font-medium transition-colors cursor-pointer shadow-md shadow-blue-500/20">
           <Plus size={15} /> New Chat
         </motion.button>
       </div>
 
-      <div className="px-4 py-3 border-b border-white/[0.04]">
-                  <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/[0.04] border border-white/[0.06] focus-within:border-cyan-500/30 transition-colors">
-          <Search size={13} className="text-slate-600 shrink-0" />
+      <div className="px-4 py-3 border-b border-black/[0.05]">
+        <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-black/[0.03] border border-black/[0.06] focus-within:border-blue-400/40 transition-colors">
+          <Search size={13} className="text-slate-400 shrink-0" />
           <input value={search} onChange={(e) => setSearch(e.target.value)}
             placeholder="Search chats..."
-            className="flex-1 bg-transparent text-slate-300 text-xs outline-none placeholder-slate-600" />
+            className="flex-1 bg-transparent text-slate-600 text-xs outline-none placeholder-slate-400" />
           {search && (
-            <button onClick={() => setSearch("")} aria-label="Clear search" className="text-slate-600 hover:text-slate-400 transition-colors">
+            <button onClick={() => setSearch("")} aria-label="Clear search" className="text-slate-400 hover:text-slate-600 transition-colors">
               <X size={12} />
             </button>
           )}
@@ -187,38 +179,38 @@ function Sidebar({ chats, activeChatId, setActiveChatId, createNewChat, deleteCh
       <div className="flex-1 overflow-y-auto py-2 px-3 space-y-0.5">
         {pinned.length > 0 && (
           <>
-            <p className="text-slate-700 text-xs uppercase tracking-widest px-2 py-1.5">📌 Pinned</p>
+            <p className="text-slate-400 text-xs uppercase tracking-widest px-2 py-1.5">📌 Pinned</p>
             <AnimatePresence initial={false}>{pinned.map(renderChatItem)}</AnimatePresence>
-            <div className="my-2 border-t border-white/[0.04]" />
+            <div className="my-2 border-t border-black/[0.05]" />
           </>
         )}
         {recent.length > 0 && (
           <>
-            <p className="text-slate-700 text-xs uppercase tracking-widest px-2 py-1.5">Recent</p>
+            <p className="text-slate-400 text-xs uppercase tracking-widest px-2 py-1.5">Recent</p>
             <AnimatePresence initial={false}>{recent.map(renderChatItem)}</AnimatePresence>
           </>
         )}
         {filtered.length === 0 && (
-          <div className="text-center py-10 text-slate-700 text-sm">
+          <div className="text-center py-10 text-slate-400 text-sm">
             <MessageSquare size={26} className="mx-auto mb-2 opacity-30" />
             <p>{search ? "No chats found" : "No chats yet"}</p>
           </div>
         )}
       </div>
 
-      <div className="p-3 border-t border-white/[0.06]">
+      <div className="p-3 border-t border-black/[0.06]">
         <div className="flex items-center gap-3 px-2">
           <div className="relative shrink-0">
             <img src={user?.photoURL} alt={user?.displayName || "Profile"}
-              className="w-8 h-8 rounded-full border border-white/20 object-cover" />
-            <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-emerald-400 rounded-full border-2 border-[#05060f]" />
+              className="w-8 h-8 rounded-full border border-black/10 object-cover" />
+            <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-emerald-400 rounded-full border-2 border-[#faf6ee]" />
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-white text-xs font-medium truncate">{user?.displayName}</p>
-            <p className="text-slate-600 text-xs truncate">{user?.email}</p>
+            <p className="text-[#1e2a3a] text-xs font-medium truncate">{user?.displayName}</p>
+            <p className="text-slate-400 text-xs truncate">{user?.email}</p>
           </div>
           <button onClick={logout} aria-label="Log out"
-            className="p-1.5 rounded-lg hover:bg-red-500/15 text-slate-600 hover:text-red-400 transition-colors" title="Logout">
+            className="p-1.5 rounded-lg hover:bg-red-500/10 text-slate-400 hover:text-red-500 transition-colors" title="Logout">
             <LogOut size={14} />
           </button>
         </div>

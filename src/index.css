@@ -2,20 +2,20 @@
 
 @layer base {
   :root {
-    --bg-primary: #05060f;
-    --bg-secondary: #0a0e1a;
-    --bg-card: rgba(255, 255, 255, 0.05);
-    --bg-card-hover: rgba(255, 255, 255, 0.08);
-    --border: rgba(34, 211, 238, 0.12);
-    --border-strong: rgba(34, 211, 238, 0.25);
-    --text-primary: #f1f5f9;
-    --text-secondary: #94a3b8;
-    --text-muted: #64748b;
-    --accent: #22d3ee;
-    --accent-hover: #06b6d4;
-    --accent-glow: rgba(34, 211, 238, 0.3);
-    --user-bubble: #0891b2;
-    --ai-bubble: #101725;
+    --bg-primary: #faf6ee;
+    --bg-secondary: #f3ede0;
+    --bg-card: #ffffff;
+    --bg-card-hover: #fdfbf6;
+    --border: rgba(30, 58, 95, 0.08);
+    --border-strong: rgba(30, 58, 95, 0.16);
+    --text-primary: #1e2a3a;
+    --text-secondary: #5b6b82;
+    --text-muted: #8b98ab;
+    --accent: #3b82f6;
+    --accent-hover: #2563eb;
+    --accent-glow: rgba(59, 130, 246, 0.25);
+    --user-bubble: #dbeafe;
+    --ai-bubble: #ffffff;
     --sidebar-width: 280px;
   }
 
@@ -31,8 +31,8 @@
 
   ::-webkit-scrollbar { width: 5px; height: 5px; }
   ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 10px; }
-  ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.22); }
+  ::-webkit-scrollbar-thumb { background: rgba(30,58,95,0.15); border-radius: 10px; }
+  ::-webkit-scrollbar-thumb:hover { background: rgba(30,58,95,0.25); }
 }
 
 @layer utilities {
@@ -50,7 +50,7 @@
   }
   .glow { box-shadow: 0 0 30px var(--accent-glow); }
   .text-gradient {
-    background: linear-gradient(135deg, #67e8f9, #22d3ee, #a78bfa);
+    background: linear-gradient(135deg, #1e3a8a, #3b82f6, #7c9fdb);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -178,20 +178,20 @@
   max-width: 460px;
   max-height: 460px;
   border-radius: 50%;
-  filter: blur(40px);
-  opacity: 0.28;
+  filter: blur(50px);
+  opacity: 0.35;
   will-change: transform;
 }
 .gi-aurora-1 {
   top: -10%;
   left: -8%;
-  background: radial-gradient(circle, #6366f1 0%, transparent 70%);
+  background: radial-gradient(circle, #93c5fd 0%, transparent 70%);
   animation: gi-aurora-drift-1 26s ease-in-out infinite;
 }
 .gi-aurora-2 {
   bottom: -15%;
   right: -8%;
-  background: radial-gradient(circle, #a855f7 0%, transparent 70%);
+  background: radial-gradient(circle, #c4b5fd 0%, transparent 70%);
   animation: gi-aurora-drift-2 30s ease-in-out infinite;
 }
 @keyframes gi-aurora-drift-1 {
@@ -206,7 +206,8 @@
 .gi-star {
   position: absolute;
   border-radius: 50%;
-  background: #ffffff;
+  background: #1e3a8a;
+  opacity: 0.06;
   animation-name: gi-twinkle;
   animation-timing-function: ease-in-out;
   animation-iteration-count: infinite;
