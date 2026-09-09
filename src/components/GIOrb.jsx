@@ -52,15 +52,17 @@ function GIOrb({ size = 220, thinking = false, speaking = false }) {
       className="relative flex items-center justify-center select-none"
       style={{ width: size, height: size }}
     >
+      {/* Glow halo — shifted to blue tones to match the light/cream
+          theme's accent color instead of the old indigo/purple. */}
       <motion.div
         className="absolute inset-0 rounded-full"
         style={{
           background:
-            "radial-gradient(circle, rgba(99,102,241,0.35) 0%, rgba(139,92,246,0.18) 45%, transparent 72%)",
+            "radial-gradient(circle, rgba(59,130,246,0.30) 0%, rgba(96,165,250,0.15) 45%, transparent 72%)",
         }}
         animate={{
           scale: gesturePulse ? [1, 1.22, 1] : thinking ? [1, 1.12, 1] : [1, 1.04, 1],
-          opacity: gesturePulse ? [0.7, 1, 0.7] : thinking ? [0.7, 1, 0.7] : [0.55, 0.75, 0.55],
+          opacity: gesturePulse ? [0.7, 1, 0.7] : thinking ? [0.7, 1, 0.7] : [0.5, 0.7, 0.5],
         }}
         transition={{ duration: gesturePulse ? 0.9 : thinking ? 1.2 : 3.2, repeat: gesturePulse ? 0 : Infinity, ease: "easeInOut" }}
       />

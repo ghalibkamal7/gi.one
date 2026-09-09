@@ -235,7 +235,7 @@
   height: 4px;
   margin: -2px;
   border-radius: 50%;
-  background: radial-gradient(circle, #66E6FF 0%, #6366f1 100%);
+  background: radial-gradient(circle, #66E6FF 0%, #3b82f6 100%);
   animation-name: gi-orb-particle-pulse;
   animation-timing-function: ease-in-out;
   animation-iteration-count: infinite;

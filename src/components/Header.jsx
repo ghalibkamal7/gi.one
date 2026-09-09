@@ -37,7 +37,7 @@ function Header({ greeting, messageCount }) {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 0.3 }}
-        className="text-slate-400 text-sm max-w-sm mb-6"
+        className="text-slate-500 text-sm max-w-sm mb-6"
       >
         Learn Smarter With GI
       </motion.p>

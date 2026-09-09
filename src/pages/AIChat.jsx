@@ -354,7 +354,7 @@ function AIChat() {
     : cleanMessages;
 
   return (
-    <div className="flex h-screen bg-[#0a0f1e] overflow-hidden relative">
+    <div className="flex h-screen bg-transparent overflow-hidden relative">
       <AuroraBackground starCount={14} />
 
       <AnimatePresence>
@@ -384,7 +384,7 @@ function AIChat() {
 
       <div className="flex-1 flex flex-col min-w-0">
 
-               <div className="flex items-center gap-2 px-3 sm:px-4 py-2.5 border-b border-white/[0.06] shrink-0 bg-[#0a0f1e]/90 backdrop-blur-sm">
+               <div className="flex sm:hidden items-center justify-between gap-1 px-2 py-2 border-b border-black/[0.06] bg-[#faf6ee]/95 backdrop-blur-sm overflow-x-auto shrink-0">
           <button onClick={() => setSidebarOpen((p) => !p)}
             className="hidden md:flex p-2 rounded-xl hover:bg-white/[0.06] text-slate-500 hover:text-white transition-colors shrink-0">
             <Menu size={17} />
@@ -394,7 +394,7 @@ function AIChat() {
             <Menu size={17} />
           </button>
 
-          <span className="text-slate-300 text-sm font-medium truncate flex-1 min-w-0">
+          <span className="text-[#1e2a3a] text-sm font-medium truncate flex-1 min-w-0">
             {activeChat?.title || "New Chat"}
           </span>
 
