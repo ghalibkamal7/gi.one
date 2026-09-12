@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, TrendingUp, MessageSquare, Flame } from "lucide-react";
 
+const ACCENT = "#0891b2";
+
 function StudyAnalytics({ isOpen, onClose, chats, messages }) {
   const [stats, setStats] = useState(null);
 
@@ -38,7 +40,7 @@ function StudyAnalytics({ isOpen, onClose, chats, messages }) {
       <motion.div
         initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
         role="dialog" aria-modal="true"
-        className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm"
+        className="fixed inset-0 z-50 flex items-center justify-center bg-[#1e2a3a]/25 backdrop-blur-sm"
         onClick={onClose}
       >
         <motion.div
@@ -46,23 +48,28 @@ function StudyAnalytics({ isOpen, onClose, chats, messages }) {
           animate={{ scale: 1, opacity: 1, y: 0 }}
           exit={{ scale: 0.9, opacity: 0 }}
           onClick={(e) => e.stopPropagation()}
-          className="glass-strong rounded-3xl p-7 w-full max-w-md mx-4 border border-white/10 shadow-2xl relative max-h-[90vh] overflow-y-auto"
+          className="relative rounded-3xl p-7 w-full max-w-md mx-4 border shadow-2xl max-h-[90vh] overflow-y-auto"
+          style={{
+            backgroundImage: `radial-gradient(circle at 50% 0%, ${ACCENT}10 0%, #fffdf8 55%), linear-gradient(rgba(8,145,178,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(8,145,178,0.04) 1px, transparent 1px)`,
+            backgroundSize: "auto, 28px 28px, 28px 28px",
+            borderColor: `${ACCENT}28`,
+          }}
         >
-          <button onClick={onClose} aria-label="Close" className="p-2 rounded-xl hover:bg-white/10 text-slate-500 hover:text-white transition-colors">
-  <X size={18} />
-</button>
-          <h3 className="text-white font-bold text-xl mb-1">📊 Study Analytics</h3>
+          <button onClick={onClose} aria-label="Close" className="absolute top-5 right-5 p-2 rounded-xl hover:bg-black/5 text-slate-400 hover:text-[#1e2a3a] transition-colors">
+            <X size={18} />
+          </button>
+          <h3 className="text-[#1e2a3a] font-bold text-xl mb-1">📊 Study Analytics</h3>
           <p className="text-slate-500 text-xs mb-6">Your learning activity this week</p>
 
           <div className="grid grid-cols-3 gap-3 mb-6">
             {[
-              { icon: <MessageSquare size={16} />, label: "Total Chats", value: stats?.totalChats || 0, color: "indigo" },
-              { icon: <TrendingUp size={16} />, label: "Questions", value: stats?.userMsgs || 0, color: "purple" },
-              { icon: <Flame size={16} />, label: "AI Replies", value: (stats?.totalMsgs || 0) - (stats?.userMsgs || 0), color: "emerald" },
+              { icon: <MessageSquare size={16} />, label: "Total Chats", value: stats?.totalChats || 0, color: "#0891b2" },
+              { icon: <TrendingUp size={16} />, label: "Questions", value: stats?.userMsgs || 0, color: "#7c3aed" },
+              { icon: <Flame size={16} />, label: "AI Replies", value: (stats?.totalMsgs || 0) - (stats?.userMsgs || 0), color: "#059669" },
             ].map((s) => (
-              <div key={s.label} className="bg-white/[0.04] rounded-2xl p-3 border border-white/[0.06] text-center">
-                <div className={`text-${s.color}-400 flex justify-center mb-1`}>{s.icon}</div>
-                <p className="text-white font-bold text-xl">{s.value}</p>
+              <div key={s.label} className="bg-white rounded-2xl p-3 border border-black/[0.06] shadow-sm text-center">
+                <div className="flex justify-center mb-1" style={{ color: s.color }}>{s.icon}</div>
+                <p className="text-[#1e2a3a] font-bold text-xl">{s.value}</p>
                 <p className="text-slate-500 text-xs mt-0.5">{s.label}</p>
               </div>
             ))}
@@ -77,9 +84,10 @@ function StudyAnalytics({ isOpen, onClose, chats, messages }) {
                     initial={{ height: 0 }}
                     animate={{ height: `${Math.round((d.count / maxCount) * 100)}%` }}
                     transition={{ delay: i * 0.05, duration: 0.4 }}
-                    className="w-full rounded-t-lg bg-gradient-to-t from-indigo-600 to-purple-500 min-h-[4px]"
+                    className="w-full rounded-t-lg min-h-[4px]"
+                    style={{ background: `linear-gradient(to top, ${ACCENT}, #67e8f9)` }}
                   />
-                  <span className="text-slate-600 text-xs">{d.label}</span>
+                  <span className="text-slate-400 text-xs">{d.label}</span>
                 </div>
               ))}
             </div>
@@ -90,7 +98,7 @@ function StudyAnalytics({ isOpen, onClose, chats, messages }) {
               <p className="text-slate-400 text-xs uppercase tracking-widest mb-3">Recent Topics</p>
               <div className="flex flex-wrap gap-2">
                 {[...new Set(stats.topics)].slice(0, 8).map((t, i) => (
-                  <span key={i} className="px-3 py-1 rounded-full text-xs text-slate-300 bg-white/5 border border-white/10">
+                  <span key={i} className="px-3 py-1 rounded-full text-xs text-slate-600 bg-white border border-black/[0.08]">
                     {t}...
                   </span>
                 ))}
