@@ -382,9 +382,8 @@ function AIChat() {
         )}
       </AnimatePresence>
 
-      <div className="flex-1 flex flex-col min-w-0">
-
-               <div className="flex sm:hidden items-center justify-between gap-1 px-2 py-2 border-b border-black/[0.06] bg-[#faf6ee]/95 backdrop-blur-sm overflow-x-auto shrink-0">
+           <div className="flex-1 flex flex-col min-w-0">
+        <div className="flex items-center gap-2 px-3 sm:px-4 py-2.5 border-b border-black/[0.06] shrink-0 bg-[#faf6ee]/90 backdrop-blur-sm">
           <button onClick={() => setSidebarOpen((p) => !p)}
             className="hidden md:flex p-2 rounded-xl hover:bg-white/[0.06] text-slate-500 hover:text-white transition-colors shrink-0">
             <Menu size={17} />
@@ -435,18 +434,18 @@ function AIChat() {
           </div>
         </div>
 
-        <div className="flex sm:hidden items-center justify-between gap-1 px-2 py-2 border-b border-white/[0.06] bg-[#0a0f1e]/95 backdrop-blur-sm overflow-x-auto shrink-0">
+        <div className="flex sm:hidden items-center justify-between gap-1 px-2 py-2 border-b border-black/[0.06] bg-[#faf6ee]/95 backdrop-blur-sm overflow-x-auto shrink-0">
           {VISIBLE_TOOLS.map(({ icon, label, key }) => (
             <button key={key} onClick={() => openTool(key)}
               className={`relative flex flex-col items-center gap-1 px-2 py-1.5 rounded-xl text-[10px] font-medium shrink-0 transition-all duration-200 ${
                 key === "pins" && pins.length > 0
-                  ? "bg-indigo-500/20 text-indigo-300"
-                  : "text-slate-400"
+                  ? "bg-blue-500/15 text-blue-600"
+                  : "text-slate-500"
               }`}>
               {icon}
               <span className="leading-none whitespace-nowrap">{label}</span>
               {key === "pins" && pins.length > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-indigo-500 text-white text-[9px] flex items-center justify-center font-bold">
+                <span className="absolute -top-0.5 -right-0.5 w-3.5 h-3.5 rounded-full bg-blue-500 text-white text-[9px] flex items-center justify-center font-bold">
                   {pins.length}
                 </span>
               )}
