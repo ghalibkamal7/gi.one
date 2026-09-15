@@ -191,14 +191,25 @@ function AIChat() {
 
       const userText   = data.text?.trim() || "";
       const userImages = data.images?.length ? data.images : data.image ? [data.image] : [];
+      const userPdf    = data.pdf || null;
       if (userText) lastUserMsg.current = userText;
+
+      // What gets saved to Firestore stays short (just a reference to
+      // the PDF, not its full extracted text) — the full text is only
+      // ever used for THIS turn's Gemini call, below.
+      const displayText = userPdf
+        ? `${userText}${userText ? "\n\n" : ""}📄 Attached: ${userPdf.name} (${userPdf.pageCount} page${userPdf.pageCount === 1 ? "" : "s"})`
+        : userText;
+      const geminiText = userPdf
+        ? `${userText}\n\n[Attached PDF: ${userPdf.name}]\n${userPdf.text}${userPdf.truncated ? "\n\n[Note: this PDF was long and was truncated to its first portion.]" : ""}`
+        : userText;
 
       setInput("");
       setSuggestions([]);
       setStreamingText("");
 
       try {
-        await addMessage(chatId, "user", userText, userImages);
+        await addMessage(chatId, "user", displayText, userImages);
       } catch (err) {
         console.error("Failed to save user message:", err);
         sendingRef.current = false;
@@ -223,7 +234,7 @@ function AIChat() {
 
       let fullText = "";
       try {
-        if (isGhalibQuery(userText)) {
+        if (!userPdf && isGhalibQuery(userText)) {
           const bio = getGhalibBio();
           const words = bio.split(" ");
           let built = "";
@@ -233,7 +244,7 @@ function AIChat() {
             if (i % 6 === 0) await new Promise((r) => setTimeout(r, 12));
           }
           fullText = bio;
-        } else if (isGreeting(userText)) {
+        } else if (!userPdf && isGreeting(userText)) {
           const reply = getGreetingReply(user?.displayName?.split(" ")[0]);
           const words = reply.split(" ");
           let built = "";
@@ -246,7 +257,7 @@ function AIChat() {
         } else {
           const history = [
             ...priorMessages.map((m) => ({ role: m.role, text: m.text, images: m.images?.length ? m.images : m.image ? [m.image] : [] })),
-            { role: "user", text: userText, images: userImages },
+            { role: "user", text: geminiText, images: userImages },
           ];
 
           const systemPrompt = hinglishRef.current ? HINGLISH_SYSTEM_PROMPT : null;

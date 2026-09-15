@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Send, ImagePlus, X, Mic, MicOff, AlertCircle } from "lucide-react";
+import { Send, ImagePlus, X, Mic, MicOff, AlertCircle, FileText, Loader2 } from "lucide-react";
+import { extractPdfText } from "../utils/pdfText";
 import { normalizeSpokenGI } from "../utils/giSpeech";
 
 const MAX_IMAGES = 4;
@@ -109,30 +110,66 @@ function MessageInput({ value, setValue, onSend, loading, onVoiceOpen }) {
     const fileList = Array.from(e.target.files || []);
     e.target.value = "";
     if (!fileList.length) return;
-    await addFiles(fileList);
+    const imageFiles = fileList.filter((f) => f.type.startsWith("image/"));
+    const pdfFiles = fileList.filter((f) => f.type === "application/pdf");
+    if (imageFiles.length) await addFiles(imageFiles);
+    if (pdfFiles.length) await handlePdfSelect(pdfFiles[0]);
   };
 
   const handleDrop = async (e) => {
     e.preventDefault();
-    if (!e.dataTransfer.files?.length) return;
-    await addFiles(e.dataTransfer.files);
+    const fileList = Array.from(e.dataTransfer.files || []);
+    if (!fileList.length) return;
+    const imageFiles = fileList.filter((f) => f.type.startsWith("image/"));
+    const pdfFiles = fileList.filter((f) => f.type === "application/pdf");
+    if (imageFiles.length) await addFiles(imageFiles);
+    if (pdfFiles.length) await handlePdfSelect(pdfFiles[0]);
   };
 
   const removeImage = (idx) => {
     setImages((prev) => prev.filter((_, i) => i !== idx));
   };
 
+  const MAX_PDF_BYTES = 15 * 1024 * 1024;
+  const [pdfFile, setPdfFile] = useState(null);
+  const [pdfLoading, setPdfLoading] = useState(false);
+  const [pdfError, setPdfError] = useState("");
+  const pdfRef = useRef(null);
+  useEffect(() => { pdfRef.current = pdfFile; }, [pdfFile]);
+
+  const handlePdfSelect = async (file) => {
+    setPdfError("");
+    if (file.size > MAX_PDF_BYTES) {
+      setPdfError("That PDF is too large (max 15MB).");
+      return;
+    }
+    setPdfLoading(true);
+    try {
+      const { text, pageCount, truncated } = await extractPdfText(file);
+      setPdfFile({ name: file.name, text, pageCount, truncated });
+    } catch (err) {
+      setPdfError(err.message || "Couldn't read that PDF.");
+    } finally {
+      setPdfLoading(false);
+      textareaRef.current?.focus();
+    }
+  };
+
+  const removePdf = () => { setPdfFile(null); setPdfError(""); };
+
   const sendingRef = useRef(false);
 
   const handleSend = () => {
     const text = valueRef.current;
     const imgs = imagesRef.current;
-    if (!text.trim() && !imgs.length) return;
+    const pdf = pdfRef.current;
+    if (!text.trim() && !imgs.length && !pdf) return;
     if (sendingRef.current) return;
     sendingRef.current = true;
-    onSend({ text, images: imgs });
+    onSend({ text, images: imgs, pdf });
     setValue("");
     setImages([]);
+    setPdfFile(null);
     if (textareaRef.current) {
       textareaRef.current.style.height = "24px";
     }
@@ -175,6 +212,31 @@ function MessageInput({ value, setValue, onSend, loading, onVoiceOpen }) {
             <AlertCircle size={13} className="shrink-0 mt-0.5" /> {imageError}
           </div>
         )}
+                        {pdfLoading && (
+          <div className="mb-3 flex items-center gap-2 px-3 py-2 rounded-xl bg-black/[0.03] border border-black/[0.08] text-slate-500 text-xs">
+            <Loader2 size={13} className="animate-spin" /> Reading PDF on your device...
+          </div>
+        )}
+        {pdfError && (
+          <div className="flex items-start gap-1.5 mb-2 px-1 text-red-500 text-xs">
+            <AlertCircle size={13} className="shrink-0 mt-0.5" /> {pdfError}
+          </div>
+        )}
+        {pdfFile && !pdfLoading && (
+          <div className="mb-3 flex items-center gap-2 px-3 py-2 rounded-xl bg-blue-50 border border-blue-200/60">
+            <FileText size={16} className="text-blue-500 shrink-0" />
+            <div className="flex-1 min-w-0">
+              <p className="text-[#1e2a3a] text-xs font-medium truncate">{pdfFile.name}</p>
+              <p className="text-slate-400 text-[11px]">
+                {pdfFile.pageCount} page{pdfFile.pageCount === 1 ? "" : "s"} · processed on your device
+                {pdfFile.truncated ? " · long document, truncated" : ""}
+              </p>
+            </div>
+            <button onClick={removePdf} aria-label="Remove PDF" className="p-1 rounded-lg hover:bg-blue-100 text-slate-400 hover:text-red-500 transition-colors shrink-0">
+              <X size={14} />
+            </button>
+          </div>
+        )}
         {images.length > 0 && (
           <div className="mb-3 flex flex-wrap gap-2">
             <AnimatePresence>
@@ -201,12 +263,12 @@ function MessageInput({ value, setValue, onSend, loading, onVoiceOpen }) {
           loading ? "border-black/[0.06]" : "border-black/[0.08] focus-within:border-blue-400/50"
         } border`}>
           <button onClick={() => fileRef.current?.click()}
-            title="Attach image (or drag & drop)"
+            title="Attach image or PDF (or drag & drop)"
             className="p-1.5 rounded-xl text-slate-400 hover:text-blue-500 hover:bg-blue-500/10 transition-all shrink-0 mb-0.5 tooltip"
-            data-tip="Attach image">
+            data-tip="Attach image or PDF">
             <ImagePlus size={17} />
           </button>
-          <input ref={fileRef} type="file" accept="image/*" multiple onChange={handleImage} className="hidden" />
+          <input ref={fileRef} type="file" accept="image/*,application/pdf" multiple onChange={handleImage} className="hidden" />
 
           <textarea
             ref={textareaRef}
@@ -234,7 +296,7 @@ function MessageInput({ value, setValue, onSend, loading, onVoiceOpen }) {
             whileHover={{ scale: 1.06 }}
             whileTap={{ scale: 0.94 }}
             onClick={handleSend}
-            disabled={loading || (!value.trim() && !images.length)}
+            disabled={loading || (!value.trim() && !images.length && !pdfFile)}
             className="p-2 rounded-xl bg-blue-500 hover:bg-blue-600 disabled:opacity-30 disabled:cursor-not-allowed text-white transition-all shrink-0 mb-0.5 shadow-md shadow-blue-500/20"
           >
             <Send size={15} />
