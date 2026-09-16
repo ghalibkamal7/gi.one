@@ -9,6 +9,7 @@ const ROLE_PRESETS = [
   "Product Manager", "UI/UX Designer", "College Admission",
 ];
 const TOTAL_QUESTIONS = 5;
+const ACCENT = "#3b82f6";
 
 function MockInterview({ isOpen, onClose }) {
   const [phase, setPhase] = useState("setup");
@@ -193,32 +194,34 @@ Give brief, encouraging spoken feedback (under 100 words, conversational, no mar
     <AnimatePresence>
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
         role="dialog" aria-modal="true" aria-label="Mock Interview"
-        className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4"
+        className="fixed inset-0 z-50 flex items-center justify-center bg-[#1e2a3a]/25 backdrop-blur-sm p-4"
         onClick={phase === "setup" ? onClose : undefined}>
         <motion.div initial={{ scale: 0.9, opacity: 0, y: 20 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.9, opacity: 0 }}
           onClick={(e) => e.stopPropagation()}
-          className="glass-strong rounded-3xl w-full max-w-lg border border-white/10 shadow-2xl overflow-hidden max-h-[85vh] flex flex-col">
+          className="rounded-3xl w-full max-w-lg border shadow-2xl overflow-hidden max-h-[85vh] flex flex-col"
+          style={{ background: `radial-gradient(circle at 50% 0%, ${ACCENT}10 0%, #fffdf8 55%)`, borderColor: `${ACCENT}28` }}>
 
-          <div className="flex items-center justify-between p-6 border-b border-white/[0.06] shrink-0">
+          <div className="flex items-center justify-between p-6 border-b border-black/[0.06] shrink-0">
             <div className="flex items-center gap-2">
-              <Briefcase size={18} className="text-indigo-400" />
+              <Briefcase size={18} style={{ color: ACCENT }} />
               <div>
-                <h3 className="text-white font-bold text-lg">Mock Interview</h3>
+                <h3 className="text-[#1e2a3a] font-bold text-lg">Mock Interview</h3>
                 <p className="text-slate-500 text-xs mt-0.5">
                   {phase === "setup" ? "Live voice interview practice" : `Question ${Math.min(questions.length + 1, TOTAL_QUESTIONS)} of ${TOTAL_QUESTIONS}`}
                 </p>
               </div>
             </div>
-            <button onClick={handleClose} aria-label="Close"
-              className="p-2 rounded-xl hover:bg-white/10 text-slate-500 hover:text-white transition-colors">
+                       <button onClick={handleClose} aria-label="Close"
+              className="p-2 rounded-xl hover:bg-black/5 text-slate-400 hover:text-[#1e2a3a] transition-colors">
               <X size={18} />
             </button>
           </div>
 
           {phase !== "setup" && phase !== "finished" && (
-            <div className="h-1 bg-white/5 shrink-0">
+            <div className="h-1 bg-black/[0.05] shrink-0">
               <motion.div animate={{ width: `${(questions.length / TOTAL_QUESTIONS) * 100}%` }}
-                className="h-full bg-gradient-to-r from-indigo-600 to-purple-500 transition-all duration-300" />
+                className="h-full transition-all duration-300"
+                style={{ background: `linear-gradient(90deg, ${ACCENT}, #60a5fa)` }} />
             </div>
           )}
 
@@ -229,12 +232,12 @@ Give brief, encouraging spoken feedback (under 100 words, conversational, no mar
                 <input value={role} onChange={(e) => setRole(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && startInterview()}
                   placeholder="e.g. Frontend Developer, MBA Admission..."
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-600 outline-none focus:border-indigo-500/50 mb-3" />
+                                   className="w-full bg-black/[0.03] border border-black/[0.08] rounded-xl px-4 py-2.5 text-sm text-[#1e2a3a] placeholder-slate-400 outline-none focus:border-blue-400/50 mb-3"/>
 
                 <div className="flex flex-wrap gap-1.5 mb-5">
                   {ROLE_PRESETS.map((r) => (
                     <button key={r} onClick={() => setRole(r)}
-                      className="px-3 py-1.5 rounded-lg text-xs bg-white/5 hover:bg-indigo-600/30 text-slate-300 hover:text-white border border-white/10 transition-all">
+                      className="px-3 py-1.5 rounded-lg text-xs bg-black/[0.03] hover:bg-blue-500/10 text-slate-600 hover:text-[#1e2a3a] border border-black/[0.08] transition-all">
                       {r}
                     </button>
                   ))}
@@ -245,20 +248,22 @@ Give brief, encouraging spoken feedback (under 100 words, conversational, no mar
                   {["Easy", "Medium", "Hard"].map((d) => (
                     <button key={d} onClick={() => setDifficulty(d)}
                       className={`flex-1 py-2 rounded-xl text-sm font-medium transition-all ${
-                        difficulty === d ? "bg-indigo-600 text-white" : "bg-white/5 text-slate-400 hover:text-white"
-                      }`}>
+                        difficulty === d ? "text-white" : "bg-black/[0.03] text-slate-500 hover:text-[#1e2a3a]"
+                      }`}
+                      style={difficulty === d ? { backgroundColor: ACCENT } : undefined}>
                       {d}
                     </button>
                   ))}
                 </div>
 
                 {!supported && (
-                  <p className="text-amber-400 text-xs mb-4">Voice isn't supported in this browser — try Chrome.</p>
+                  <p className="text-amber-600 text-xs mb-4">Voice isn't supported in this browser — try Chrome.</p>
                 )}
 
                 <motion.button whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.98 }}
                   onClick={startInterview} disabled={!role.trim() || !supported}
-                  className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 text-white font-medium text-sm transition-colors">
+                  className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl disabled:opacity-40 text-white font-medium text-sm transition-colors"
+                  style={{ backgroundColor: ACCENT }}>
                   <Mic size={16} /> Start Speaking Interview
                 </motion.button>
               </div>
@@ -273,31 +278,31 @@ Give brief, encouraging spoken feedback (under 100 words, conversational, no mar
                   }
                   transition={{ duration: phase === "listening" ? 1.1 : 1.6, repeat: Infinity, ease: "easeInOut" }}
                   className={`w-24 h-24 rounded-full flex items-center justify-center mb-5 ${
-                    phase === "listening" ? "bg-indigo-600 shadow-[0_0_40px_rgba(99,102,241,0.5)]" :
-                    phase === "speaking" ? "bg-purple-600 shadow-[0_0_40px_rgba(168,85,247,0.4)]" :
-                    "bg-white/10"
+                    phase === "listening" ? "bg-blue-500 shadow-[0_0_40px_rgba(59,130,246,0.35)]" :
+                    phase === "speaking" ? "bg-violet-500 shadow-[0_0_40px_rgba(139,92,246,0.3)]" :
+                    "bg-black/[0.06]"
                   }`}
                 >
-                  {phase === "thinking" ? <Loader2 size={30} className="text-white animate-spin" /> : <Mic size={30} className="text-white" />}
+                  {phase === "thinking" ? <Loader2 size={30} className="text-slate-500 animate-spin" /> : <Mic size={30} className={phase === "idle" ? "text-slate-500" : "text-white"} />}
                 </motion.div>
 
-                <p className="text-white font-medium text-sm mb-1">{statusText}</p>
+                <p className="text-[#1e2a3a] font-medium text-sm mb-1">{statusText}</p>
                 {currentQ && (phase === "listening" || phase === "speaking") && (
-                  <p className="text-slate-400 text-sm max-w-sm mt-3 italic">"{currentQ}"</p>
+                  <p className="text-slate-500 text-sm max-w-sm mt-3 italic">"{currentQ}"</p>
                 )}
                 <AnimatePresence>
                   {transcript && (
                     <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                      className="text-indigo-300 text-sm mt-3 max-w-sm">
+                      className="text-blue-600 text-sm mt-3 max-w-sm">
                       You're saying: "{transcript}"
                     </motion.p>
                   )}
                 </AnimatePresence>
-                {error && <p className="text-red-400 text-xs mt-3">{error}</p>}
+                {error && <p className="text-red-500 text-xs mt-3">{error}</p>}
 
                 <button onClick={togglePause}
                   className={`mt-6 flex items-center gap-2 px-4 py-2 rounded-xl text-xs border transition-colors ${
-                    paused ? "bg-indigo-600/20 border-indigo-500/40 text-indigo-300" : "bg-white/5 border-white/10 text-slate-400 hover:text-white"
+                    paused ? "bg-blue-500/10 border-blue-400/40 text-blue-600" : "bg-black/[0.03] border-black/[0.08] text-slate-500 hover:text-[#1e2a3a]"
                   }`}>
                   {paused ? <Mic size={13} /> : <MicOff size={13} />}
                   {paused ? "Resume" : "Pause"}
@@ -305,7 +310,7 @@ Give brief, encouraging spoken feedback (under 100 words, conversational, no mar
 
                 {questions.length > 0 && (
                   <div className="w-full text-left mt-8 space-y-2">
-                    <p className="text-slate-700 text-xs uppercase tracking-widest">Answered so far</p>
+                    <p className="text-slate-400 text-xs uppercase tracking-widest">Answered so far</p>
                     {questions.map((q, i) => (
                       <p key={i} className="text-slate-500 text-xs">✓ Q{i + 1}: {q.q.slice(0, 60)}{q.q.length > 60 ? "..." : ""}</p>
                     ))}
@@ -317,20 +322,20 @@ Give brief, encouraging spoken feedback (under 100 words, conversational, no mar
             {phase === "finished" && (
               <div className="w-full text-left">
                 <div className="flex flex-col items-center mb-5">
-                  <Award size={32} className="text-amber-400 mb-2" />
-                  <h4 className="text-white font-bold">Interview Complete!</h4>
+                  <Award size={32} className="text-amber-500 mb-2" />
+                  <h4 className="text-[#1e2a3a] font-bold">Interview Complete!</h4>
                 </div>
                 {summary && (
-                  <div className="px-4 py-3 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 text-slate-200 text-sm leading-relaxed mb-5">
+                  <div className="px-4 py-3 rounded-2xl bg-blue-50 border border-blue-200/60 text-[#1e2a3a] text-sm leading-relaxed mb-5">
                     {summary}
                   </div>
                 )}
-                <p className="text-slate-500 text-xs uppercase tracking-widest mb-2">Transcript</p>
+                <p className="text-slate-400 text-xs uppercase tracking-widest mb-2">Transcript</p>
                 <div className="space-y-3 mb-2">
                   {questions.map((q, i) => (
                     <div key={i}>
-                      <p className="text-indigo-400 text-xs font-medium mb-1">Q{i + 1}: {q.q}</p>
-                      <p className="text-slate-400 text-xs pl-3 border-l-2 border-white/10">{q.answer}</p>
+                      <p className="text-blue-600 text-xs font-medium mb-1">Q{i + 1}: {q.q}</p>
+                      <p className="text-slate-500 text-xs pl-3 border-l-2 border-black/[0.08]">{q.answer}</p>
                     </div>
                   ))}
                 </div>
@@ -339,10 +344,10 @@ Give brief, encouraging spoken feedback (under 100 words, conversational, no mar
           </div>
 
           {phase === "finished" && (
-            <div className="p-6 border-t border-white/[0.06] shrink-0">
+                        <div className="p-6 border-t border-black/[0.06] shrink-0">
               <motion.button whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.98 }}
                 onClick={restart}
-                className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl bg-white/5 hover:bg-white/10 border border-white/10 text-white font-medium text-sm transition-colors">
+                className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl bg-black/[0.03] hover:bg-black/[0.06] border border-black/[0.08] text-[#1e2a3a] font-medium text-sm transition-colors">
                 <RotateCcw size={15} /> Practice Again
               </motion.button>
             </div>
