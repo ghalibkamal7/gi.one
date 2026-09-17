@@ -1,5 +1,5 @@
 import {
-  collection, addDoc, updateDoc, deleteDoc,
+  collection, addDoc, updateDoc, deleteDoc, getDocs, writeBatch,
   doc, query, where, orderBy, onSnapshot, serverTimestamp,
 } from "firebase/firestore";
 import { db } from "../firebase";
@@ -30,7 +30,23 @@ export async function renameChat(chatId, title) {
   });
 }
 
+// Firestore never cascade-deletes subcollections automatically — a
+// chat's messages (including any embedded images) would otherwise
+// silently remain in Firestore forever after the chat itself was
+// "deleted". Chunked at 450 (Firestore batches cap at 500 ops) so an
+// unusually long chat history doesn't silently fail to fully delete.
 export async function deleteChat(chatId) {
+  const messagesRef = collection(db, "chats", chatId, "messages");
+  const snap = await getDocs(messagesRef);
+  const docs = snap.docs;
+
+  const CHUNK = 450;
+  for (let i = 0; i < docs.length; i += CHUNK) {
+    const batch = writeBatch(db);
+    docs.slice(i, i + CHUNK).forEach((d) => batch.delete(d.ref));
+    await batch.commit();
+  }
+
   await deleteDoc(doc(db, "chats", chatId));
 }
 

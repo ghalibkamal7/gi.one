@@ -83,6 +83,8 @@ function Login() {
                 </p>
                 <p className="mt-2 text-xs text-slate-500">
                   Contact us: <a href="mailto:ghalibkamal8@gmail.com" className="text-blue-500 hover:text-blue-600 transition-colors">ghalibkamal8@gmail.com</a>
+                  {" · "}
+                  <a href="/privacy" className="text-blue-500 hover:text-blue-600 transition-colors">Privacy</a>
                 </p>
               </div>
             </motion.div>
