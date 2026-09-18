@@ -18,9 +18,11 @@ import {
 } from "../services/firestore";
 import { streamGeminiResponseWithTools } from "../services/gemini";
 import { isGhalibQuery, getGhalibBio } from "../components/GhalibBio";
+import { subscribeToReminders, markFired } from "../services/reminders";
+import { speakInLanguage } from "../utils/ttsSpeak";
 import { isGreeting, getGreetingReply } from "../components/GreetingReply";
 import { motion, AnimatePresence } from "framer-motion";
-import { Mic, Timer, BarChart2, BookOpen, Pin, Menu, FileImage, Droplet, Terminal, Briefcase, Image as ImageIcon, Scissors, Users, Languages, ChevronDown } from "lucide-react";
+import { Mic, Timer, BarChart2, BookOpen, Pin, Menu, Bell, FileImage, Droplet, Terminal, Briefcase, Image as ImageIcon, Scissors, Users, Languages, ChevronDown } from "lucide-react";
 import GestureControl from "../components/GestureControl";
 
 const JarvisDashboard = lazy(() => import("../components/JarvisDashboard"));
@@ -30,6 +32,7 @@ const MockInterview     = lazy(() => import("../components/MockInterview"));
 const LocalAgentPanel    = lazy(() => import("../components/LocalAgentPanel"));
 const StudyRoom          = lazy(() => import("../components/StudyRoom"));
 const GITalk              = lazy(() => import("../components/GITalk"));
+const Reminders            = lazy(() => import("../components/Reminders"));
 const GI3DCore           = lazy(() => import("../components/GI3DCore"));
 const FocusMode        = lazy(() => import("../components/FocusMode"));
 const StudyAnalytics   = lazy(() => import("../components/StudyAnalytics"));
@@ -42,6 +45,7 @@ const VISIBLE_TOOLS = [
   { icon: <Droplet size={14} />,  label: "Periods", key: "cycle" },
   { icon: <Pin size={14} />,      label: "Pins",    key: "pins"  },
   { icon: <BarChart2 size={14} />,label: "Stats",   key: "stats" },
+  { icon: <Bell size={14} />,      label: "Reminders", key: "reminders" },
 ];
 
 function AIChat() {
@@ -76,6 +80,7 @@ function AIChat() {
   const [flashcardsOpen, setFlashcardsOpen] = useState(false);
   const [pdfOpen, setPdfOpen]           = useState(false);
   const [pinsOpen, setPinsOpen]         = useState(false);
+  const [remindersOpen, setRemindersOpen] = useState(false);
   const [pins, setPins]                 = useState([]);
   const [hinglish, setHinglish]         = useState(false);
   const [currentMood, setCurrentMood]   = useState("focused");
@@ -96,6 +101,26 @@ function AIChat() {
   useEffect(() => { hinglishRef.current = hinglish; }, [hinglish]);
   useEffect(() => { currentMoodRef.current = currentMood; }, [currentMood]);
   useEffect(() => { chatsRef.current = chats; }, [chats]);
+    // Runs as long as GI.ONE is open in any tab — this is an honest
+  // limitation, not a bug: there is no web API for a true background
+  // alarm that fires while the browser itself isn't running.
+  useEffect(() => {
+    if (!user) return;
+    let known = [];
+    const unsub = subscribeToReminders(user.uid, (list) => { known = list; });
+    const interval = setInterval(() => {
+      const now = Date.now();
+      known.filter((r) => !r.fired && new Date(r.dueAt).getTime() <= now).forEach((r) => {
+        markFired(r.id);
+        if (Notification.permission === "granted") {
+          new Notification("GI.ONE Reminder", { body: r.text, icon: "/favicon.svg" });
+        }
+        speakInLanguage(`Reminder: ${r.text}`, "en-IN");
+      });
+    }, 20000);
+    if (Notification.permission === "default") Notification.requestPermission();
+    return () => { unsub(); clearInterval(interval); };
+  }, [user]);
 
   useEffect(() => {
     if (!user) return;
@@ -342,6 +367,7 @@ function AIChat() {
     if (key === "core")      setCoreOpen(true);
     if (key === "studyroom") setStudyRoomOpen(true);
     if (key === "gitalk")    setTalkOpen(true);
+    if (key === "reminders") setRemindersOpen(true);
   };
 
   const sidebarProps = {
@@ -542,6 +568,7 @@ function AIChat() {
         <LocalAgentPanel isOpen={agentOpen} onClose={() => setAgentOpen(false)} />
         <GI3DCore isOpen={coreOpen} onClose={() => setCoreOpen(false)} />
         <StudyRoom isOpen={studyRoomOpen} onClose={() => setStudyRoomOpen(false)} />
+        <Reminders isOpen={remindersOpen} onClose={() => setRemindersOpen(false)} />
         <GITalk isOpen={talkOpen} onClose={() => setTalkOpen(false)} />
         <PinnedMessages isOpen={pinsOpen} onClose={() => setPinsOpen(false)} pins={pins} onUnpin={handleUnpin} />
       </Suspense>
