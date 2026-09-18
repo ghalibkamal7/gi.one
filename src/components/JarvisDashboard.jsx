@@ -10,6 +10,7 @@ import { onGesture } from "../utils/gestureEvents";
 import { GESTURE_LABELS } from "../utils/gestureDetection";
 import { normalizeSpokenGI, cleanForSpeech, getPreferredVoice, getVoiceGenderPref, setVoiceGenderPref } from "../utils/giSpeech";
 import { fetchWeather, describeWeatherCode, getCurrentPosition, getTimezoneCityLabel } from "../utils/weather";
+import { matchAppOpenCommand, openApp } from "../utils/voiceCommands";
 
 function HudRing({ size, strokeWidth = 1.5, dash, duration = 20, reverse = false, opacity = 0.4, color = "#22d3ee" }) {
   const r = (size - strokeWidth) / 2;
@@ -236,14 +237,37 @@ function JarvisDashboard({
       const raw = Array.from(e.results).map((res) => res[0].transcript).join("");
       const norm = normalizeSpokenGI(raw);
       setTranscript(norm);
-      if (e.results[e.results.length - 1].isFinal) {
+           if (e.results[e.results.length - 1].isFinal) {
         setTranscript("");
-        if (norm.trim()) {
-          setPhase("thinking");
-          onUserSpeech(norm.trim());
-        } else {
-          startListening();
+        const finalText = norm.trim();
+        if (!finalText) { startListening(); return; }
+
+        // Deterministic app-open commands are handled here, BEFORE
+        // ever reaching Gemini — matched against a fixed allowlist,
+        // never AI-interpreted, so this can't be tricked into opening
+        // something unintended.
+        const appMatch = matchAppOpenCommand(finalText);
+        if (appMatch) {
+          logEvent(`Opening ${appMatch.label}`);
+          openApp(appMatch);
+          lastSpokenRef.current = `Opening ${appMatch.label}.`;
+          const synth = synthRef.current;
+          if (synth) {
+            synth.cancel();
+            const utt = new SpeechSynthesisUtterance(`Opening ${appMatch.label}.`);
+            utt.lang = "en-IN";
+            utt.onend = () => { if (openRef.current && !pausedRef.current) startListening(); };
+            synth.speak(utt);
+            setPhase("speaking");
+          } else {
+            startListening();
+          }
+          return;
         }
+
+        logEvent("Voice input detected");
+        setPhase("thinking");
+        onUserSpeech(finalText);
       } else if (norm.trim() && phaseRef.current === "listening") {
         setPhase("hearing");
       }

@@ -1,0 +1,23 @@
+{
+  "name": "GI.ONE",
+  "short_name": "GI.ONE",
+  "description": "Learn Smarter With GI — your AI study companion",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#faf6ee",
+  "theme_color": "#faf6ee",
+  "icons": [
+    {
+      "src": "/gi-logo-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
