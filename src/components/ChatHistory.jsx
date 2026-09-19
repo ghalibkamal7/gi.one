@@ -81,7 +81,7 @@ function MessageBubble({ msg, index, onPin, onRegenerate, isLast }) {
         ) : null}
 
         {!isUser && msg.text && !msg.streaming && (
-          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all duration-200 px-1">
+          <div className="flex items-center gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all duration-200 px-1">
             <button onClick={handleCopy}
               className="flex items-center gap-1 px-2 py-1 rounded-lg text-xs text-slate-400 hover:text-slate-700 hover:bg-black/[0.04] transition-all">
               {copied ? <><Check size={11} className="text-emerald-500" /> Copied</> : <><Copy size={11} /> Copy</>}

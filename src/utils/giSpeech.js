@@ -59,15 +59,24 @@ export function getPreferredVoice(synth, gender = getVoiceGenderPref()) {
   if (!voices.length) return null;
   const enVoices = voices.filter((v) => v.lang.startsWith("en"));
   const pool = enVoices.length ? enVoices : voices;
-  const hints = gender === "male" ? MALE_HINTS : FEMALE_HINTS;
 
+  // Narrow to the best-matching LOCALE first (same strategy GI Talk's
+  // ttsSpeak.js uses, which is why that voice sounds better) — this
+  // avoids a name-hint like "female" accidentally matching a low-
+  // quality generic local Android voice before a proper en-IN/en-GB
+  // network voice ever gets a chance to be considered.
+  const localeTier =
+    pool.filter((v) => v.lang.includes("en-IN")).length ? pool.filter((v) => v.lang.includes("en-IN")) :
+    pool.filter((v) => v.lang.includes("en-GB")).length ? pool.filter((v) => v.lang.includes("en-GB")) :
+    pool.filter((v) => v.lang.includes("en-US")).length ? pool.filter((v) => v.lang.includes("en-US")) :
+    pool;
+
+  // Gender hint is now only a tie-breaker WITHIN the correct locale,
+  // not the primary selector.
+  const hints = gender === "male" ? MALE_HINTS : FEMALE_HINTS;
   for (const hint of hints) {
-    const match = pool.find((v) => v.name.toLowerCase().includes(hint));
+    const match = localeTier.find((v) => v.name.toLowerCase().includes(hint));
     if (match) return match;
   }
-  return (
-    pool.find((v) => v.lang.includes("en-IN")) ||
-    pool.find((v) => v.lang.includes("en-GB")) ||
-    pool[0]
-  );
+  return localeTier[0];
 }

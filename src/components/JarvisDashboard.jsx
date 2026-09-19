@@ -224,16 +224,16 @@ function JarvisDashboard({
     });
   }, [isOpen, logEvent]);
 
-  useEffect(() => {
+   const createRecognition = useCallback(() => {
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SR) { setSupported(false); return; }
+    if (!SR) { setSupported(false); return null; }
 
     const r = new SR();
     r.continuous = false;
     r.interimResults = true;
     r.lang = "en-IN";
 
-        r.onresult = (e) => {
+    r.onresult = (e) => {
       const raw = Array.from(e.results).map((res) => res[0].transcript).join("");
       const norm = normalizeSpokenGI(raw);
       setTranscript(norm);
@@ -274,14 +274,40 @@ function JarvisDashboard({
     };
     r.onerror = () => { if (openRef.current && !pausedRef.current) startListening(); };
     r.onend = () => {
-      if (openRef.current && !pausedRef.current && phase === "listening") {
+      if (openRef.current && !pausedRef.current && phaseRef.current === "listening") {
         try { r.start(); } catch { /* already running */ }
       }
     };
 
-    recognitionRef.current = r;
+    return r;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    recognitionRef.current = createRecognition();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Watchdog: browser SpeechRecognition objects can silently stop
+  // firing onresult/onend after several start/stop cycles (a known
+  // Web Speech API quirk, especially on mobile Chrome) — the UI stays
+  // stuck showing "LISTENING" forever with no error and no way to
+  // recover other than a full page reload. If nothing has happened
+  // for 15s while supposedly listening, throw the old recognition
+  // instance away and build a fresh one.
+  const listenWatchdogRef = useRef(null);
+  useEffect(() => {
+    clearTimeout(listenWatchdogRef.current);
+    if (phase !== "listening") return;
+    listenWatchdogRef.current = setTimeout(() => {
+      if (phaseRef.current !== "listening" || !openRef.current || pausedRef.current) return;
+      try { recognitionRef.current?.stop(); } catch { /* noop */ }
+      recognitionRef.current = createRecognition();
+      startListening();
+    }, 15000);
+    return () => clearTimeout(listenWatchdogRef.current);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [phase]);
 
   const startListening = () => {
     if (!recognitionRef.current || pausedRef.current) return;
