@@ -198,23 +198,43 @@ function TalkMode() {
   const [lang2, setLang2] = useState("en");
   const [history, setHistory] = useState([]);
   const [voiceState, setVoiceState] = useState("idle");
-  const [activeSpeaker, setActiveSpeaker] = useState(null);
   const [textInput, setTextInput] = useState("");
   const [error, setError] = useState("");
+  const [conversationActive, setConversationActive] = useState(false);
+  // Which language we expect NEXT — improves recognition accuracy by
+  // telling the browser's speech engine which phonetics to listen for,
+  // since it can only target one language at a time. Alternates after
+  // each successful exchange; this is a heuristic, not mind-reading —
+  // if someone speaks out of turn, translateForConversation() still
+  // correctly detects and routes it, just with slightly lower speech
+  // recognition accuracy for that one utterance.
+  const [expectedLang, setExpectedLang] = useState("hi");
   const bottomRef = useRef(null);
+  const activeRef = useRef(false);
+  const expectedLangRef = useRef("hi");
 
   const stt = useSpeechToText();
+
+  useEffect(() => { activeRef.current = conversationActive; }, [conversationActive]);
+  useEffect(() => { expectedLangRef.current = expectedLang; }, [expectedLang]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [history]);
 
   useEffect(() => {
-    if (stt.error) { setError(stt.error); setVoiceState("idle"); setActiveSpeaker(null); }
-  }, [stt.error]);
+    setExpectedLang(lang1);
+  }, [lang1, lang2]);
+
+  const startListening = useCallback(() => {
+    if (!activeRef.current) return;
+    const bcp47 = getLanguage(expectedLangRef.current)?.bcp47 || "en-US";
+    setVoiceState("listening");
+    stt.start(bcp47, (finalText) => processUtteranceRef.current(finalText));
+  }, [stt]);
 
   const processUtterance = useCallback(async (text) => {
-    if (!text.trim()) return;
+    if (!text.trim()) { if (activeRef.current) startListening(); return; }
     setVoiceState("processing");
     setError("");
     try {
@@ -226,28 +246,57 @@ function TalkMode() {
         translatedText: result.translation,
         translatedLang: result.targetLanguageCode,
       }]);
+      // Next turn, we expect a reply IN the language we just translated
+      // TO — that's whoever's about to respond.
+      setExpectedLang(result.targetLanguageCode);
+
+      if (!activeRef.current) return; // stopped while translating
       setVoiceState("speaking");
       const bcp47 = getLanguage(result.targetLanguageCode)?.bcp47 || "en-US";
       speakInLanguage(result.translation, bcp47, {
-        onEnd: () => setVoiceState("idle"),
-        onError: () => setVoiceState("idle"),
+        onEnd: () => { if (activeRef.current) startListening(); else setVoiceState("idle"); },
+        onError: () => { if (activeRef.current) startListening(); else setVoiceState("idle"); },
       });
     } catch (err) {
       setError(err.message || "Translation failed.");
-      setVoiceState("idle");
-    } finally {
-      setActiveSpeaker(null);
+      if (activeRef.current) startListening(); else setVoiceState("idle");
     }
-  }, [lang1, lang2]);
+  }, [lang1, lang2, startListening]);
 
-  const startSpeaking = (speakerNum) => {
-    if (stt.isListening) { stt.stop(); setActiveSpeaker(null); setVoiceState("idle"); return; }
-    const langCode = speakerNum === 1 ? lang1 : lang2;
-    const bcp47 = getLanguage(langCode)?.bcp47 || "en-US";
-    setActiveSpeaker(speakerNum);
-    setVoiceState("listening");
-    setError("");
-    stt.start(bcp47, (finalText) => processUtterance(finalText));
+  // A ref indirection so startListening's closure always calls the
+  // LATEST processUtterance (which itself depends on lang1/lang2)
+  // without needing to reconstruct the SpeechRecognition instance
+  // every time either language changes.
+  const processUtteranceRef = useRef(processUtterance);
+  useEffect(() => { processUtteranceRef.current = processUtterance; }, [processUtterance]);
+
+  useEffect(() => {
+    if (stt.error) {
+      setError(stt.error);
+      if (activeRef.current) {
+        // Transient recognition errors (e.g. brief silence timeout)
+        // shouldn't kill the whole conversation — retry shortly.
+        setTimeout(() => { if (activeRef.current) startListening(); }, 600);
+      } else {
+        setVoiceState("idle");
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [stt.error]);
+
+  const toggleConversation = () => {
+    if (conversationActive) {
+      setConversationActive(false);
+      activeRef.current = false;
+      stt.stop();
+      stopSpeaking();
+      setVoiceState("idle");
+    } else {
+      setConversationActive(true);
+      activeRef.current = true;
+      setError("");
+      startListening();
+    }
   };
 
   const sendText = () => {
@@ -280,7 +329,7 @@ function TalkMode() {
         {history.length === 0 && (
           <div className="h-full flex flex-col items-center justify-center text-center text-slate-400">
             <MessageSquare size={32} className="mb-3 opacity-40" />
-            <p className="text-sm">Tap a mic below to start the conversation</p>
+            <p className="text-sm">Tap "Start Conversation" and just talk — GI listens for both sides</p>
           </div>
         )}
         {history.map((entry) => {
@@ -317,7 +366,7 @@ function TalkMode() {
       )}
 
       <div className="p-3 sm:p-4 border-t border-black/[0.06] bg-white">
-        <div className="flex items-center gap-2 mb-3">
+        <div className="flex items-center gap-2 mb-4">
           <input value={textInput} onChange={(e) => setTextInput(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && sendText()}
             placeholder="Or type instead of speaking..."
@@ -328,27 +377,27 @@ function TalkMode() {
             Send
           </button>
         </div>
-        <div className="flex items-center justify-center gap-6">
-          <button onClick={() => startSpeaking(1)} disabled={!stt.isSupported || (stt.isListening && activeSpeaker !== 1)}
-            className="flex flex-col items-center gap-1.5">
-            <span className={`w-14 h-14 rounded-full flex items-center justify-center transition-all text-white disabled:opacity-30 ${
-              activeSpeaker === 1 ? "bg-red-500 animate-pulse" : ""
-            }`} style={activeSpeaker !== 1 ? { backgroundColor: ACCENT } : undefined}>
-              <Mic size={20} />
-            </span>
-            <span className="text-slate-500 text-xs">{getLanguageLabel(lang1)}</span>
-          </button>
+
+        <div className="flex flex-col items-center gap-3">
+          <motion.button
+            whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
+            onClick={toggleConversation}
+            disabled={!stt.isSupported}
+            className={`flex items-center gap-2 px-8 py-4 rounded-full text-white font-medium shadow-lg transition-all disabled:opacity-40 ${
+              conversationActive ? "bg-red-500 hover:bg-red-600" : ""
+            }`}
+            style={!conversationActive ? { backgroundColor: ACCENT } : undefined}>
+            <Mic size={18} className={voiceState === "listening" ? "animate-pulse" : ""} />
+            {conversationActive ? "Stop Conversation" : "Start Conversation"}
+          </motion.button>
           <VoiceStatePill state={voiceState} />
-          <button onClick={() => startSpeaking(2)} disabled={!stt.isSupported || (stt.isListening && activeSpeaker !== 2)}
-            className="flex flex-col items-center gap-1.5">
-            <span className={`w-14 h-14 rounded-full flex items-center justify-center transition-all text-white disabled:opacity-30 ${
-              activeSpeaker === 2 ? "bg-red-500 animate-pulse" : ""
-            }`} style={activeSpeaker !== 2 ? { backgroundColor: ACCENT } : undefined}>
-              <Mic size={20} />
-            </span>
-            <span className="text-slate-500 text-xs">{getLanguageLabel(lang2)}</span>
-          </button>
+          {conversationActive && (
+            <p className="text-slate-400 text-xs">
+              Expecting {getLanguageLabel(expectedLang)} next — either person can just speak
+            </p>
+          )}
         </div>
+
         {!stt.isSupported && (
           <p className="text-amber-600 text-xs text-center mt-3">
             Voice input isn't supported in this browser — use the text box above instead.
